@@ -21,10 +21,6 @@ temp = ContinuaARicevere()
 
 while True:
     com = input("Inserisci il comando: ")
-    
-    # controllo stringa
-    if com[1] != ";":
-         com = "s;0"
 
     # sendall
     s.sendall(f"{com}".encode())
