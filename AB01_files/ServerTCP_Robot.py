@@ -52,6 +52,7 @@ class ClientThread(Thread):
 
     def run(self):
         #LOOP
+        l_valori = [str(a) for a in range(0,6)]
         cont = False
         while self.isRunning:
             # ricevo il messaggio dal client
@@ -63,11 +64,19 @@ class ClientThread(Thread):
 
             # creo un dizionatio con i comandi
             dict_commands = {"f":gino.forward,"b":gino.backward,"l":gino.left,"r":gino.right, "s":gino.stop }
+            
+            # controllo stringa
+            if text_recived[1] != ";":
+                text_recived = "s;0"
 
             # salvo il comando ricevuto
-            com = text_recived.split(";")
-            comando = com[0]
-            distanza = float(com[1])
+            com = text_recived.split(";")            
+            try:
+                comando = com[0]
+                distanza = float(com[1])
+            except:
+                comando = "s"
+                distanza = 0.0
 
             if distanza <= 0:
                 distanza = 0.0
@@ -85,6 +94,7 @@ class ClientThread(Thread):
                 self.conn.sendall(f"f = avanti\nb = indietro\nr = destra\nl = sinistra\ns = ferma\n".encode())
             else:
                 print(f"{comando}")
+                
             if comando in dict_commands:
                 dict_commands["s"]()
                 dict_commands[comando]()
@@ -102,4 +112,3 @@ while True:
     client.start()
 
 s.close()
-
