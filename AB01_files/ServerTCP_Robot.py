@@ -2,7 +2,12 @@ import socket
 from threading import Thread
 import AlphaBot
 import time
-
+import sqlite3
+"""
+Authors:
+- Di Mantua Daniele
+- Becchio Alexander
+"""
 # dichiaro l'indirizzo il buffer size e la lista dei client
 my_address = ("192.168.1.137", 6969)
 buffer_size = 4096
@@ -48,60 +53,102 @@ class ClientThread(Thread):
         self.conn = connection
         self.add = address
         self.isRunning = True
-
+        self.comando = None
+        self.distanza = None
+        self.com = None        
+        self.dict_commands = {"f":gino.forward,"b":gino.backward,"l":gino.left,"r":gino.right, "s":gino.stop } # creo un dizionatio con i comandi    
+        self.nome_database = "AB01.db"
+        self.cursor = None
+        self.con = None
+        self.comandoricevuto = False
+        self.inizializzaSensori = False
 
     def run(self):
         #LOOP
-        l_valori = [str(a) for a in range(0,6)]
-        cont = False
         while self.isRunning:
+            
             # ricevo il messaggio dal client
             text_recived = self.conn.recv(buffer_size).decode()
-
-            if cont == False:
-                self.tempo.start()
-                cont = True
-
-            # creo un dizionatio con i comandi
-            dict_commands = {"f":gino.forward,"b":gino.backward,"l":gino.left,"r":gino.right, "s":gino.stop }
             
-            # controllo stringa
-            if text_recived[1] != ";":
-                text_recived = "s;0"
-
-            # salvo il comando ricevuto
-            com = text_recived.split(";")            
-            try:
-                comando = com[0]
-                distanza = float(com[1])
-            except:
-                comando = "s"
-                distanza = 0.0
-
-            if distanza <= 0:
-                distanza = 0.0
-            elif distanza > 5:
-                distanza = 5.0
-            else: pass
-
             # stampo quello che riceve il robot
-            print(f"{comando} da {add}")
+            print(f"Comando ricevuto: {text_recived} ---> Indirizzo: {self.add}")
 
-            # controllo il comando e eseguo una azione
-            if comando == "e":
-                break
-            elif comando == "?":
-                self.conn.sendall(f"f = avanti\nb = indietro\nr = destra\nl = sinistra\ns = ferma\n".encode())
+            self.iniClasseEDatabase()
+
+            if len(text_recived) == 1:
+                self.comandiDatabase()
             else:
-                print(f"{comando}")
-                
-            if comando in dict_commands:
-                dict_commands["s"]()
-                dict_commands[comando]()
-                time.sleep(distanza)
-                dict_commands["s"]()
-            else:
-                dict_commands["s"]()
+                self.comandiNormali(text_recived)
+
+            self.con.close()
+            self.comandoricevuto = False
+
+    def iniClasseEDatabase(self):
+            
+            if self.inizializzaSensori == False:
+                self.tempo.start()
+                self.inizializzaSensori = True
+
+            if self.comandoricevuto == False:
+                self.con = sqlite3.connect(f"./{self.nome_database}")
+                self.cursor = self.con.cursor()
+                self.comandoricevuto = True
+
+    def comandiDatabase(self):
+
+        try:
+            res = self.cursor.execute(f"SELECT seq_mov FROM tab_mov WHERE tab_mov.Shortcut = {self.comando}")
+            strignaComplessa = res.fetchall()
+            l_comandi = strignaComplessa.split(",")
+
+            for a in l_comandi:
+                self.splitStringa(a)
+                self.controlloStringa()
+                if self.comando in self.dict_commands:
+                    self.eseguiComando()
+                else:
+                    self.dict_commands["s"]()
+        except:
+            self.dict_commands["s"]()
+
+    def comandiNormali(self, text):
+
+        self.splitStringa(text)
+
+        self.controlloStringa()
+
+        # controllo se il comando è nel dizionario
+        if self.comando in self.dict_commands:
+            self.eseguiComando()
+        else:
+            self.dict_commands["s"]()
+    
+    def splitStringa(self, text):
+        # controllo stringa
+        if text[1] != ";" or len(text) <= 3 :
+            text = "s;0"
+
+        # salvo il comando ricevuto    
+        self.com = text.split(";")
+
+    def controlloStringa(self):
+            try:
+                self.comando = self.com[0]
+                self.distanza = float(self.com[1])/1000
+            except:
+                self.comando = "s"
+                self.distanza = 0.0
+
+            if self.distanza < 0.15:
+                self.distanza = 0.0
+            elif self.distanza > 5:
+                self.distanza = 5.0
+
+    def eseguiComando(self):
+            self.dict_commands["s"]()
+            self.dict_commands[self.comando]()
+            time.sleep(self.distanza)
+            self.dict_commands["s"]()
 
 
 while True:
