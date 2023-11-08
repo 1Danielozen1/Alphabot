@@ -51,7 +51,7 @@ class InvioContinuo(Thread):
 class ClientThread(Thread):
     def __init__(self, connection, address):
         super().__init__()
-        self.tempo = InvioContinuo(connection,address)
+        self.invio_continuo = InvioContinuo(connection,address)
         self.conn = connection
         self.add = address
         self.isRunning = True
@@ -78,6 +78,7 @@ class ClientThread(Thread):
             self.iniClasseEDatabase()
 
             if len(text_recived) == 1:
+                self.comando = text_recived
                 self.comandiDatabase()
             else:
                 self.comandiNormali(text_recived)
@@ -85,10 +86,11 @@ class ClientThread(Thread):
             self.con.close()
             self.comandoricevuto = False
 
+    # Avvia l'avvio continuo dei dati del sensore e apre il database
     def iniClasseEDatabase(self):
             
             if self.inizializzaSensori == False:
-                self.tempo.start()
+                self.invio_continuo.start()
                 self.inizializzaSensori = True
 
             if self.comandoricevuto == False:
@@ -96,23 +98,25 @@ class ClientThread(Thread):
                 self.cursor = self.con.cursor()
                 self.comandoricevuto = True
 
+    # legge i comandi del database e li esegue
     def comandiDatabase(self):
+        res = self.cursor.execute(f"SELECT seq_mov FROM tab_mov WHERE tab_mov.Shortcut = '{self.comando}'")
+        strignaComplessa = res.fetchall()
 
-        try:
-            res = self.cursor.execute(f"SELECT seq_mov FROM tab_mov WHERE tab_mov.Shortcut = {self.comando}")
-            strignaComplessa = res.fetchall()
-            l_comandi = strignaComplessa.split(",")
+        if len(strignaComplessa) < 1:
+            l_comandi = ["s;0"]
+        else:
+            l_comandi = str(strignaComplessa[0][0]).split(",")
 
-            for a in l_comandi:
-                self.splitStringa(a)
-                self.controlloStringa()
-                if self.comando in self.dict_commands:
-                    self.eseguiComando()
-                else:
-                    self.dict_commands["s"]()
-        except:
-            self.dict_commands["s"]()
-
+        for a in l_comandi:
+            self.splitStringa(a)
+            self.controlloStringa()
+            if self.comando in self.dict_commands:
+                self.eseguiComando()
+            else:
+                self.dict_commands["s"]()
+    
+    # Esegue i comandi basici
     def comandiNormali(self, text):
 
         self.splitStringa(text)
@@ -125,6 +129,7 @@ class ClientThread(Thread):
         else:
             self.dict_commands["s"]()
     
+    # splitta la stringa e controlla se è nel formato fiusto
     def splitStringa(self, text):
         # controllo stringa
         if text[1] != ";" or len(text) <= 3 :
@@ -133,6 +138,7 @@ class ClientThread(Thread):
         # salvo il comando ricevuto    
         self.com = text.split(";")
 
+    # controlla se la stringa data in input è consentita
     def controlloStringa(self):
             try:
                 self.comando = self.com[0]
@@ -146,6 +152,7 @@ class ClientThread(Thread):
             elif self.distanza > 5:
                 self.distanza = 5.0
 
+    # esegue il comando dato
     def eseguiComando(self):
             self.dict_commands["s"]()
             self.dict_commands[self.comando]()
