@@ -1,0 +1,54 @@
+body {
+    background: red;
+    color: yellow;
+    text-align: center;
+}
+
+h3{
+    font-size: xx-large;
+}
+
+#pulsanti, #login {
+    text-align: center;
+    margin-top: 5%;
+}
+
+#giu,#dx,#sx,#su,#sp,#pr {
+    font-size: x-large;
+}
+
+#sp,#pr {
+    font-size: large;
+    margin-bottom: 3%;
+    background-color: black;
+    color: white;
+    border-radius: 5px;
+}
+
+#pr{
+    margin-left: 1%;
+    font-size: medium;
+}
+
+#giu,#dx,#sx,#su{
+    margin-top: 1%;
+}
+
+#dx {
+    margin-left: 4%;
+}
+
+#giu, #su, #sx, #dx{
+    width: 100px;
+    height: 100px;
+}
+
+#scritta{
+    font-size: large;
+    font-weight: bold;
+}
+
+#inp{
+    color:  black;
+    border-radius: 5px;
+}
