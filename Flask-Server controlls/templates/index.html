@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App alphabot</title>
+    <link href="../static/bootstrap/bootstrap-5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link rel="stylesheet" href='..\static\style.css' />
+</head>
+
+<body>
+    <div class="container">
+        <form method="post" id="form"
+            class="rounded border border-danger position-absolute top-50 start-50 translate-middle">
+            <h3 id="loginTitle">Comandi Alphabot AB01</h3>
+
+            <div class="mb-3">
+                <select id="sp" name="stringaSpeciale" size="1" required>
+                    <option value="m">M</option>
+                    <option value="[">[</option>
+                    <option value="z">Z</option>
+                </select>
+                <input id="pr" type="submit" value="esegui" name="esegui">
+            </div>
+
+            <div class="mb-4">
+                <br>
+                <input id="su" type="image" src="../static/img/Arrow.png" name="avanti" value="avanti"
+                    style="transform:rotate(180deg);"><br>
+                <input id="sx" type="image" src="../static/img/Arrow.png" name="sinistra" value="sinistra"
+                    style="transform:rotate(90deg);">
+                <input id="dx" type="image" src="../static/img/Arrow.png" name="destra" value="destra"
+                    style="transform:rotate(-90deg);"><br>
+                <input id="giu" type="image" src="../static/img/Arrow.png" name="indietro" value="indietro">
+                <input type="hidden" id="button_pressed" name="button_pressed" value="">
+            </div>
+
+            <div class="mb-3">
+                <input id="sr" type="submit" value="start" name="start">
+                <input id="sr" type="submit" value="stop" name="stop">
+            </div>
+
+            <div class="form-floating">
+                <textarea class="form-control" placeholder="Leave a comment here" id="floatingTextarea2"
+                    style="height: 50px">{{comando}}</textarea>
+                <label for="floatingTextarea2">Comando</label>
+            </div>
+        </form>
+    </div>
+</body>
+
+</html>
+<script>
+    document.getElementById("su").addEventListener("click", function () {
+        document.getElementById("button_pressed").value = 'avanti';
+    });
+    document.getElementById("giu").addEventListener("click", function () {
+        document.getElementById("button_pressed").value = 'indietro';
+    });
+    document.getElementById("sx").addEventListener("click", function () {
+        document.getElementById("button_pressed").value = 'sinistra';
+    });
+    document.getElementById("dx").addEventListener("click", function () {
+        document.getElementById("button_pressed").value = 'destra';
+    });
+</script>
