@@ -11,8 +11,8 @@ class AlphaBot(object):
         self.IN4 = in4
         self.ENA = ena
         self.ENB = enb
-        self.PA  = 60
-        self.PB  = 60
+        self.PA  = 50
+        self.PB  = 50
         self.DR = in5
         self.DL = in6
         self.DR_status = None
