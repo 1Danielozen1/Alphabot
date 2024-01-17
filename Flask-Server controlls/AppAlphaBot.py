@@ -1,10 +1,11 @@
-from threading import Thread
 from flask import Flask, render_template, redirect, url_for, make_response, request
 import time
 import AlphaBot
 import sqlite3
 import random
 import hashlib
+import datetime
+import pandas as pd
 
 # creo il robot
 gino = AlphaBot.AlphaBot()
@@ -21,6 +22,12 @@ nome_database = "AB01.db"
 cursor = None
 con = None
 
+"""Inizio funzioni per controllo form e inserimento dati nel database"""
+# return data e l'ora
+def DataOra():
+    data = str(datetime.datetime.now())[:10]
+    ora = str(datetime.datetime.now())[11:-7]
+    return f"{data} {ora}"
 
 # hasha le poassword prima di inserirle nel database
 def hash_string(input_string):
@@ -44,7 +51,7 @@ def validate(username, password):
     con.close()
     return completion
 
-# Controlla se il codice admin sia corretto
+# Controlla che il codice admin sia corretto
 def controllaAdmin(code):
     completion = False
     con = sqlite3.connect(f'./{nome_database}')
@@ -58,6 +65,12 @@ def controllaAdmin(code):
 
 # Controllo per la registrazione utente
 def registra(username, password, confirm, admin):
+    """
+    OUTPUT:
+    0 = tutto è andata a buon fine
+    1 = lo username esiste
+    2 = La password di verifica è diversa da quella inserita prima
+    """
     con = sqlite3.connect(f'./{nome_database}')
     cur = con.cursor()
     cur.execute("SELECT Utente FROM users_logins")
@@ -80,7 +93,7 @@ def registra(username, password, confirm, admin):
 def cookieLog(name, string):
     con = sqlite3.connect(f'./{nome_database}')
     cur = con.cursor()
-    cur.execute(f'INSERT INTO Cookie VALUES(NULL, "{name}", "{string}");')
+    cur.execute(f'INSERT INTO Cookie VALUES(NULL, "{name}", "{string}", "{DataOra()}");')
     con.commit()
     con.close()
 
@@ -95,6 +108,9 @@ def stringa_casuale():
         stringa += str(random.randint(0,1000))
     return stringa
 
+"""Fine funzioni per controllo form e inserimento dati nel database"""
+
+"""Inizio funzioni per controllo stringhe e movimento Alphabot"""
 # Esegue i comandi basici
 def comandiNormali(text):
 
@@ -166,6 +182,10 @@ def iniDatabase():
         cursor = con.cursor()
         comandoricevuto = True
 
+"""Fine funzioni per controllo stringhe e movimento Alphabot"""
+
+
+"""Inizio funzioni per funzionamento delle pagine"""
 # Menu iniziale
 @app.route('/', methods=['POST', 'GET'])
 def menu():
@@ -235,7 +255,6 @@ def registration():
 
     return render_template('registration.html', error=error, ConfirmError=ConfirmError)
 
-
 #Pagin di Login
 @app.route(f'/login', methods=['POST', 'GET'])
 def login():
@@ -260,6 +279,32 @@ def login():
         
     return render_template('login.html', error=error)
 
+# Pagina dove viene mostrato il oge dell'utente
+@app.route("/Log", methods=['POST', 'GET'])
+def logPage():
+    LogData = {"Data e ora": [], "Nome": [], "Azione": []} # inserisco i dati del database in un dizionario
+    con = sqlite3.connect(f'./{nome_database}')
+    cur = con.cursor()
+    cur.execute(f"SELECT Tipo FROM users_logins WHERE Utente = '{request.cookies.get('username')}'")
+    rows = cur.fetchall()
+    # se l'utente è un admin vedrà la cronologia di tutti gli utenti
+    if rows[0][0] == 1:
+        cur.execute(f"SELECT data_e_ora, cookie_name, azione FROM Cookie")
+    else:
+        cur.execute(f"SELECT data_e_ora, cookie_name, azione FROM Cookie WHERE cookie_name = '{request.cookies.get('username')}'")
+    rows = cur.fetchall()
+    for row in rows:
+        dataora = row[0]
+        name = row[1]
+        action = row[2]
+        LogData["Data e ora"].append(dataora)
+        LogData["Nome"].append(name)
+        LogData["Azione"].append(action)
+
+    # creo un dataframe con pandas per poi aggiungerlo come tabella in formato html
+    data = pd.DataFrame(LogData)
+    con.close()
+    return render_template('logPage.html') + data.to_html(col_space=200, justify= "left", index = False, border = 0)
 
 # Pagina Comandi
 @app.route(f"/{stringa_casuale()}", methods=['POST', 'GET'])
@@ -277,19 +322,27 @@ def index():
             text_rec = "b;1000"
         elif request.form.get('button_pressed') == 'destra':
             mascheraComando = "Destra"
-            text_rec = "r;600"
+            text_rec = "r;400"
         elif request.form.get('button_pressed') == 'sinistra':
             mascheraComando = "Sinistra"
-            text_rec = "l;600"
+            text_rec = "l;400"
         elif request.form.get('esegui') == 'esegui':
             text_rec = request.form['stringaSpeciale']
             mascheraComando = text_rec.upper()
-        elif request.form.get('start') == 'start':
+        elif request.form.get('start') == 'start': # Gino va avanti all'infinito finché non viene selezionata un'altra azione
             mascheraComando = "Continua Avanti"
-            gino.forward()
+            while True:
+                gino.forward()
+                return render_template("index.html", comando=mascheraComando)
         elif request.form.get('stop') == 'stop':
             mascheraComando = "Fermo"
             gino.stop()
+        elif request.form.get("LogOut") == 'esci': # il log out setta il cookie ad 'UtenteGenerico' e riporta alla pagina home
+            mascheraComando = "L'utente è uscito."
+            cookieLog(request.cookies.get('username'), mascheraComando)
+            resp = make_response(redirect(url_for("menu")))
+            resp.set_cookie('username', "UtenteGenerico")
+            return resp
         else:
             mascheraComando = "Comando non riconosciuto"
 
@@ -308,5 +361,8 @@ def index():
         return render_template('index.html')
     return render_template("index.html", comando=mascheraComando)
 
+"""Fine funzioni per funzionamento delle pagine"""
+
+
 if __name__ == '__main__':
-    app.run(debug=False, host='127.0.0.1', port= 6969)
+    app.run(debug=True, host='127.0.0.1', port= 6969)
