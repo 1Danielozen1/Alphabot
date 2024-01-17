@@ -53,16 +53,6 @@ h3 {
     margin-top: 10%;
 }
 
-/*
-#giu,
-#dx,
-#sx,
-#su,
-#sp,
-#pr {
-    font-size: x-large;
-}*/
-
 #sr,
 #sp,
 #pr {
@@ -110,4 +100,11 @@ h3 {
 #inp {
     color: black;
     border-radius: 5px;
+}
+
+@media (max-width: 998px) {
+    #form {
+        width: 100%;
+    }
+
 }
