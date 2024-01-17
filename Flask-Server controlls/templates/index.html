@@ -14,8 +14,16 @@
     <div class="container">
         <form method="post" id="form"
             class="rounded border border-danger position-absolute top-50 start-50 translate-middle">
+            
+            <!-- Log out button -->
+            <div style="text-align: right; margin-bottom: 2%;" id="buttonContainer">
+                <button name="LogOut" value="esci" type="submit" class="btn btn-primary fs-5 btn-outline-light btn-success">Log Out</button>
+            </div>
+             <!-- End Log out button -->
+
             <h3 id="loginTitle">Comandi Alphabot AB01</h3>
 
+            <!-- Special Controls -->
             <div class="mb-3">
                 <select id="sp" name="stringaSpeciale" size="1" required>
                     <option value="m">M</option>
@@ -24,7 +32,9 @@
                 </select>
                 <input id="pr" type="submit" value="esegui" name="esegui">
             </div>
+            <!-- End Special Controls -->
 
+            <!-- Controls -->
             <div class="mb-4">
                 <br>
                 <input id="su" type="image" src="../static/img/Arrow.png" name="avanti" value="avanti"
@@ -36,17 +46,27 @@
                 <input id="giu" type="image" src="../static/img/Arrow.png" name="indietro" value="indietro">
                 <input type="hidden" id="button_pressed" name="button_pressed" value="">
             </div>
+            <!-- End Controls -->
 
+            <!-- start and stop -->
             <div class="mb-3">
                 <input id="sr" type="submit" value="start" name="start">
                 <input id="sr" type="submit" value="stop" name="stop">
             </div>
+            <!-- End start and stop -->
 
-            <div class="form-floating">
+            <!-- Show command pannel -->
+            <div class="form-floating mb-4">
                 <textarea class="form-control" placeholder="Leave a comment here" id="floatingTextarea2"
                     style="height: 50px">{{comando}}</textarea>
                 <label for="floatingTextarea2">Comando</label>
             </div>
+            <!-- End Show command pannel -->
+
+            <!-- Log option -->
+            <t>Look up your <a class="link-warning link-offset-2 link-underline link-underline-opacity-0"
+                    href="./Log">LOG</a></t><br>
+            <!-- End Log option -->
         </form>
     </div>
 </body>
