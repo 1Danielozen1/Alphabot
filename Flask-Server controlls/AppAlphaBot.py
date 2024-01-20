@@ -101,6 +101,39 @@ def cookieLog(name, string):
 def check_password(hashed_password, user_password):
     return hashed_password == user_password
 
+def ottieniRuolo():
+    con = sqlite3.connect(f'./{nome_database}')
+    cur = con.cursor()
+    cur.execute(f'SELECT Tipo FROM users_logins WHERE Utente = "{request.cookies.get('username')}"')
+    rows = cur.fetchall()
+    con.close()
+    return rows[0][0]
+
+# disabilita i controlli degli utenti non admin
+def disabilitaUtente():
+    con = sqlite3.connect(f'./{nome_database}')
+    cur = con.cursor()
+    cur.execute("UPDATE users_logins SET Attivo = 0 WHERE users_logins.Tipo = 0")
+    con.commit()
+    con.close()
+
+# abilita il controlli degli utenti non admin
+def abilitaUtente():
+    con = sqlite3.connect(f'./{nome_database}')
+    cur = con.cursor()
+    cur.execute("UPDATE users_logins SET Attivo = 1 WHERE users_logins.Tipo = 0")
+    con.commit()
+    con.close()
+
+# controlla se i controlli per l'Alphabot sono attivi.
+def comandiAttivi():
+    con = sqlite3.connect(f'./{nome_database}')
+    cur = con.cursor()
+    cur.execute(f"SELECT users_logins.Attivo FROM users_logins WHERE users_logins.Utente='{request.cookies.get('username')}'")
+    rows = cur.fetchall()
+    con.close()
+    return rows[0][0]
+
 # Crea una stringa casuale per mascherare l'indirizzo della pagini index
 def stringa_casuale():
     stringa = ""
@@ -289,9 +322,9 @@ def logPage():
     rows = cur.fetchall()
     # se l'utente è un admin vedrà la cronologia di tutti gli utenti
     if rows[0][0] == 1:
-        cur.execute(f"SELECT data_e_ora, cookie_name, azione FROM Cookie")
+        cur.execute(f"SELECT data_e_ora, cookie_name, azione FROM Cookie ORDER BY n_log DESC")
     else:
-        cur.execute(f"SELECT data_e_ora, cookie_name, azione FROM Cookie WHERE cookie_name = '{request.cookies.get('username')}'")
+        cur.execute(f"SELECT data_e_ora, cookie_name, azione FROM Cookie WHERE cookie_name = '{request.cookies.get('username')}' ORDER BY n_log DESC")
     rows = cur.fetchall()
     for row in rows:
         dataora = row[0]
@@ -311,55 +344,79 @@ def logPage():
 def index():
     global comando, comandoricevuto, con, cursor
     text_rec = "s;0"
-    mascheraComando = None
+    mascheraComando = "Nessun comando selezionato"
+    comandoAdmin = False
+
+    if ottieniRuolo() == 1:
+        comandoAdmin = True
+
     # Prende i valori che vengono premuti dall'utente e esegue l'azione
     if request.method == 'POST':
-        if request.form.get('button_pressed') == 'avanti':
-            mascheraComando = "Avanti"
-            text_rec = "f;1000"
-        elif request.form.get('button_pressed') == 'indietro':
-            mascheraComando = "Indietro"
-            text_rec = "b;1000"
-        elif request.form.get('button_pressed') == 'destra':
-            mascheraComando = "Destra"
-            text_rec = "r;400"
-        elif request.form.get('button_pressed') == 'sinistra':
-            mascheraComando = "Sinistra"
-            text_rec = "l;400"
-        elif request.form.get('esegui') == 'esegui':
-            text_rec = request.form['stringaSpeciale']
-            mascheraComando = text_rec.upper()
-        elif request.form.get('start') == 'start': # Gino va avanti all'infinito finché non viene selezionata un'altra azione
-            mascheraComando = "Continua Avanti"
-            while True:
-                gino.forward()
-                return render_template("index.html", comando=mascheraComando)
-        elif request.form.get('stop') == 'stop':
-            mascheraComando = "Fermo"
-            gino.stop()
-        elif request.form.get("LogOut") == 'esci': # il log out setta il cookie ad 'UtenteGenerico' e riporta alla pagina home
+
+        if comandiAttivi() == 1:
+            if request.form.get('button_pressed') == 'avanti':
+                mascheraComando = "Avanti"
+                text_rec = "f;1000"
+            elif request.form.get('button_pressed') == 'indietro':
+                mascheraComando = "Indietro"
+                text_rec = "b;1000"
+            elif request.form.get('button_pressed') == 'destra':
+                mascheraComando = "Destra"
+                text_rec = "r;400"
+            elif request.form.get('button_pressed') == 'sinistra':
+                mascheraComando = "Sinistra"
+                text_rec = "l;400"
+            elif request.form.get('esegui') == 'esegui':
+                text_rec = request.form['stringaSpeciale']
+                mascheraComando = text_rec.upper()
+
+            # Gino va avanti all'infinito finché non viene selezionata un'altra azione
+            elif request.form.get('start') == 'start':
+                mascheraComando = "Continua Avanti"
+                while True:
+                    gino.forward()
+                    return render_template("index.html", comando=mascheraComando, admin=comandoAdmin)
+            elif request.form.get('stop') == 'stop':
+                mascheraComando = "Fermo"
+                gino.stop()
+            else: 
+                mascheraComando = "Comando non riconosciuto"
+            
+            cookieLog(request.cookies.get('username'), mascheraComando)
+            
+            # controlla il tipo di comando ricevuto
+            if len(text_rec) == 1:
+                comando = text_rec
+                iniDatabase()
+                comandiDatabase()
+                con.close()
+                comandoricevuto = False
+            else:
+                comandiNormali(text_rec)
+
+        else: mascheraComando = "I comandi sono stati disabilitati da un Admin."
+
+        # il log out setta il cookie ad 'UtenteGenerico' e riporta alla pagina home
+        if request.form.get("LogOut") == 'esci': 
             mascheraComando = "L'utente è uscito."
             cookieLog(request.cookies.get('username'), mascheraComando)
             resp = make_response(redirect(url_for("menu")))
             resp.set_cookie('username', "UtenteGenerico")
             return resp
-        else:
-            mascheraComando = "Comando non riconosciuto"
-
-        cookieLog(request.cookies.get('username'), mascheraComando)
-
-        if len(text_rec) == 1:
-            comando = text_rec
-            iniDatabase()
-            comandiDatabase()
-            con.close()
-            comandoricevuto = False
-        else:
-            comandiNormali(text_rec)
+        
+        # comandi visibili solo agli admin
+        elif request.form.get("disable") == "disable":
+            mascheraComando = "Comandi utenti disabilitati"
+            cookieLog(request.cookies.get('username'), mascheraComando)
+            disabilitaUtente()
+        elif request.form.get("enable") == "enable":
+            mascheraComando = "Comandi utenti abilitati"
+            cookieLog(request.cookies.get('username'), mascheraComando)
+            abilitaUtente()
 
     elif request.method == 'GET':
-        return render_template('index.html')
-    return render_template("index.html", comando=mascheraComando)
+        return render_template('index.html', comando=mascheraComando, admin=comandoAdmin)
+    return render_template("index.html", comando=mascheraComando, admin=comandoAdmin)
 
 """Fine funzioni per funzionamento delle pagine"""
 
