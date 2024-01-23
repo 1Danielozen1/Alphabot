@@ -102,9 +102,9 @@ h3 {
     border-radius: 5px;
 }
 
-@media (max-width: 998px) {
+@media (max-width: 530px) {
     #form {
         width: 100%;
+        height: fit-content;
     }
-
 }
