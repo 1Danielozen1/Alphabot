@@ -13,7 +13,7 @@ gino = AlphaBot.AlphaBot()
 # creo l'app
 app = Flask(__name__)
 
-dict_commands = {"f":gino.forward,"b":gino.backward,"l":gino.left,"r":gino.right, "s":gino.stop } 
+dict_commands = {"f":gino.forward,"b":gino.backward,"l":gino.left,"r":gino.right, "s":gino.stop }
 com = None
 comando = None
 distanza = None
@@ -84,7 +84,14 @@ def registra(username, password, confirm, admin):
     if not check_password(psw, conf):
         con.close()
         return 2
-    cur.execute(f'INSERT INTO users_logins VALUES("{username}","{psw}", {admin});')
+    # controllo se i comandi degli utenti sono disattivati oppure attivati
+    if admin == False:
+        cur.execute("SELECT DISTINCT users_logins.attivo FROM users_logins WHERE users_logins.Tipo = false")
+        rows = cur.fetchall()
+        if len(rows) == False:
+            row = True
+        else: row = rows[0][0]
+    cur.execute(f'INSERT INTO users_logins VALUES("{username}","{psw}", {admin}, {row});')
     con.commit()
     con.close()
     return 0
@@ -393,7 +400,7 @@ def index():
                 comandoricevuto = False
             else:
                 comandiNormali(text_rec)
-
+            
         else: mascheraComando = "I comandi sono stati disabilitati da un Admin."
 
         # il log out setta il cookie ad 'UtenteGenerico' e riporta alla pagina home
@@ -422,4 +429,4 @@ def index():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host='127.0.0.1', port= 6969)
+    app.run(debug=True, host='192.168.43.84', port= 6969)
