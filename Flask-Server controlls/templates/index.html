@@ -15,13 +15,6 @@
         <form method="post" id="form"
             class="rounded border border-danger position-absolute top-50 start-50 translate-middle">
 
-            <!-- Log out button -->
-            <div style="text-align: right; margin-bottom: 2%;" id="buttonContainer">
-                <button name="LogOut" value="esci" type="submit"
-                    class="btn btn-primary fs-5 btn-outline-light btn-success">Log Out</button>
-            </div>
-            <!-- End Log out button -->
-
             <h3 id="loginTitle">Comandi Alphabot AB01</h3>
 
             <!-- Special Controls -->
@@ -64,19 +57,26 @@
             </div>
             <!-- End Show command pannel -->
 
-            <!-- Log option -->
-            <t>Look up your <a class="link-warning link-offset-2 link-underline link-underline-opacity-0"
-                    href="./Log">LOG</a></t><br><br>
-            <!-- End Log option -->
-
             <!---->
             {% if admin %}
-            <div>
+            <div class="mb-3">
                 <input id="pr" type="submit" value="disable" name="disable">
                 <input id="pr" type="submit" value="enable" name="enable">
             </div>
             {% endif %}
             <!---->
+
+            <!-- Log option -->
+            <t>Look up your <a class="link-warning link-offset-2 link-underline link-underline-opacity-0"
+                    href="./Log">LOG</a></t><br><br>
+            <!-- End Log option -->
+
+            <!-- Log out button -->
+            <div style="text-align: right;" id="buttonContainer">
+                <button name="LogOut" value="esci" type="submit"
+                    class="btn btn-primary fs-5 btn-outline-light btn-success">Log Out</button>
+            </div>
+            <!-- End Log out button -->
         </form>
     </div>
 </body>
