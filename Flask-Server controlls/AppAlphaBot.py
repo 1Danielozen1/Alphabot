@@ -108,10 +108,12 @@ def cookieLog(name, string):
 def check_password(hashed_password, user_password):
     return hashed_password == user_password
 
+# ottengo il ruolo dell'utente
 def ottieniRuolo():
     con = sqlite3.connect(f'./{nome_database}')
     cur = con.cursor()
-    cur.execute(f'SELECT Tipo FROM users_logins WHERE Utente = "{request.cookies.get('username')}"')
+    cookie = request.cookies.get('username')
+    cur.execute(f'SELECT Tipo FROM users_logins WHERE Utente = "{cookie}"')
     rows = cur.fetchall()
     con.close()
     return rows[0][0]
@@ -136,7 +138,8 @@ def abilitaUtente():
 def comandiAttivi():
     con = sqlite3.connect(f'./{nome_database}')
     cur = con.cursor()
-    cur.execute(f"SELECT users_logins.Attivo FROM users_logins WHERE users_logins.Utente='{request.cookies.get('username')}'")
+    cookie = request.cookies.get('username')
+    cur.execute(f"SELECT users_logins.Attivo FROM users_logins WHERE users_logins.Utente='{cookie}'")
     rows = cur.fetchall()
     con.close()
     return rows[0][0]
@@ -325,13 +328,14 @@ def logPage():
     LogData = {"Data e ora": [], "Nome": [], "Azione": []} # inserisco i dati del database in un dizionario
     con = sqlite3.connect(f'./{nome_database}')
     cur = con.cursor()
-    cur.execute(f"SELECT Tipo FROM users_logins WHERE Utente = '{request.cookies.get('username')}'")
+    cookie = request.cookies.get('username')
+    cur.execute(f"SELECT Tipo FROM users_logins WHERE Utente = '{cookie}'")
     rows = cur.fetchall()
     # se l'utente è un admin vedrà la cronologia di tutti gli utenti
     if rows[0][0] == 1:
         cur.execute(f"SELECT data_e_ora, cookie_name, azione FROM Cookie ORDER BY n_log DESC")
     else:
-        cur.execute(f"SELECT data_e_ora, cookie_name, azione FROM Cookie WHERE cookie_name = '{request.cookies.get('username')}' ORDER BY n_log DESC")
+        cur.execute(f"SELECT data_e_ora, cookie_name, azione FROM Cookie WHERE cookie_name = '{cookie}' ORDER BY n_log DESC")
     rows = cur.fetchall()
     for row in rows:
         dataora = row[0]
@@ -429,4 +433,4 @@ def index():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host='192.168.43.84', port= 6969)
+    app.run(debug=True, host='192.168.1.145', port= 6969)
