@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Esempio di fetch js</title>
+    <script>
+        function checkObstacle() {
+            fetch('http://127.0.0.1:5000/api')
+                .then(response => response.json())
+                .then(data => {
+                    const statusElement = document.getElementById('obstacleStatus');
+                    
+                    if (data.o === 1) {
+                        statusElement.textContent = 'Ostacolo presente';
+                    } else if (data.o === 0) {
+                        statusElement.textContent = 'Ostacolo assente';
+                    }
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        }
+        
+        setInterval(checkObstacle, 2000);
+    </script>
+</head>
+<body>
+    <h1>Esempio di fetch js ciclica</h1>
+    <form action="/a" method="post">
+        <input type="submit" value="A" />
+    </form>
+    <form action="/b" method="post">
+        <input type="submit" value="B" />
+    </form>
+    <!-- Elemento in cui mostrare lo stato dell'ostacolo -->
+    <div id="obstacleStatus">Stato dell'ostacolo...</div>
+</body>
+</html>
